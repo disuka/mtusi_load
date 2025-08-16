@@ -43,3 +43,14 @@ and not exists(select 1 from ludi t2 where t2.gu_kod=t1.gu_kod and konk_osnov='Б
 with t1 as  (select  gu_kod from vuz.ludi where konk_osnov='Бюджетная основа' and id_sess=11265),
 t2 as  (select  gu_kod from vuz.ludi where konk_osnov='Бюджетная основа' and id_sess=8256)
 select t1.*, t2.gu_kod from t1  left join t2 on t1.gu_kod=t2.gu_kod where t2.gu_kod is null;
+
+#все, кто "якобы зачислен", среди них выводим тех, у кого 233 балла, чтобы найти себя в списке.
+with t as (
+select ROW_NUMBER() OVER() AS row_num, l.* from ludi l where konk_name='11.03.02 Телекоммуникации: проектирование и эксплуатация сетей связи (Бюджет, Очная) (2025)' and yz=1 
+)
+select * from t where t.sum_bal=233;
+
+#финальный запрос. выводит текущую позицию в общем списке даже без поданного согласия.
+select * from (
+select ROW_NUMBER() OVER() AS row_num, l.* from ludi l where konk_name='11.03.02 Телекоммуникации: проектирование и эксплуатация сетей связи (Бюджет, Очная) (2025)' and ((yz=1) or (gu_kod=3869579)) and id_sess=7355
+) t where gu_kod=3869579;
