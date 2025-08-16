@@ -1,0 +1,45 @@
+CREATE DATABASE `vuz` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci */ /*!80016 DEFAULT ENCRYPTION='N' */;
+
+CREATE TABLE `ludi` (
+  `id_sess` int NOT NULL COMMENT 'из приложения идентификатор сессии. ',
+  `nomerpp` int NOT NULL COMMENT 'Номер ПП',
+  `bvi` int DEFAULT NULL,
+  `gu_kod` int DEFAULT NULL COMMENT 'Уникальный код. походу он с госуслуг, но может быть и пустым (если подают лично - вопрос)',
+  `n_dela` int DEFAULT NULL COMMENT 'Номер личного дела',
+  `sum_bal` int DEFAULT NULL COMMENT 'Сумма баллов',
+  `bal_inf` int DEFAULT NULL COMMENT 'Информатика и информационно-коммуникационные технологии / Основы прикладной физики / Информатика / Физика,\nиногда быает пустым',
+  `bal_matem` int DEFAULT NULL COMMENT 'Математика / Математика и элементы теории вероятностей',
+  `bal_rus` int DEFAULT NULL COMMENT 'Русский язык',
+  `bal_id` int DEFAULT NULL COMMENT 'Сумма баллов за ИД',
+  `soglasie` tinyint DEFAULT NULL COMMENT 'Согласие (0 - нет, 1- да)',
+  `prior` int DEFAULT NULL COMMENT 'Приоритет',
+  `v_prior` int DEFAULT NULL COMMENT 'Основной высший приоритет . сейчас в таблице он называется "Основной проходной приоритет "',
+  `p_prior` int DEFAULT NULL COMMENT 'Высший проходной приоритет',
+  `obsh` int DEFAULT NULL COMMENT 'Нуждаемость в общежитии',
+  `prem_pravo` int DEFAULT NULL COMMENT 'Преим. право в соответствии с частью 9 статьи 71 273-ФЗ',
+  `prem_pravo2` int DEFAULT NULL COMMENT 'Преим. право в соответствии с частью 10 статьи 71 273-ФЗ',
+  `zach` int DEFAULT NULL COMMENT 'Зачислен',
+  `osn_bvi` varchar(450) DEFAULT NULL,
+  `konk_name` varchar(450) NOT NULL,
+  `konk_kateg` varchar(450) NOT NULL,
+  `konk_napravl` varchar(450) DEFAULT NULL,
+  `konk_profil` varchar(450) DEFAULT NULL,
+  `konk_svobodno` int DEFAULT NULL,
+  `konk_forma` varchar(450) DEFAULT NULL,
+  `konk_osnov` varchar(450) DEFAULT NULL,
+  `konk_uroven` varchar(450) DEFAULT NULL,
+  `konk_mest` int DEFAULT NULL,
+  `yz` int NOT NULL COMMENT 'якобы зачислен был бы на текущий момент. в мтуси выделяется фиолетовым цветом на сайте.'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='таблица для хранения всех поступающих по всем конкурсам';
+
+#сколько загружено всего по id сессии (это она же дата загрузки от начала августа 2025 года в минутах)
+select id_sess,DATE_ADD('2025-08-01 00:00:00', INTERVAL id_sess MINUTE) AS time_zagruzka, count(1) from ludi group by id_sess order by id_sess;
+
+#кто есть в одной загрузке, но отсутствовал в другой
+select  gu_kod from ludi t1 where konk_osnov='Бюджетная основа' and id_sess=11265
+and not exists(select 1 from ludi t2 where t2.gu_kod=t1.gu_kod and konk_osnov='Бюджетная основа' and id_sess=8256);
+
+#кто есть в одной загрузке, но отсутствовал в другой, другой вариант, результат одинаков
+with t1 as  (select  gu_kod from vuz.ludi where konk_osnov='Бюджетная основа' and id_sess=11265),
+t2 as  (select  gu_kod from vuz.ludi where konk_osnov='Бюджетная основа' and id_sess=8256)
+select t1.*, t2.gu_kod from t1  left join t2 on t1.gu_kod=t2.gu_kod where t2.gu_kod is null;
